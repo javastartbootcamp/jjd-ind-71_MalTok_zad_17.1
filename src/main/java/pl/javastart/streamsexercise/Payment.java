@@ -1,5 +1,6 @@
 package pl.javastart.streamsexercise;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -37,5 +38,21 @@ public class Payment {
 
     public void setPaymentItems(List<PaymentItem> paymentItems) {
         this.paymentItems = paymentItems;
+    }
+
+    public BigDecimal countDiscountSum() {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (PaymentItem paymentItem : paymentItems) {
+            sum = sum.add(paymentItem.countDiscount());
+        }
+        return sum;
+    }
+
+    public BigDecimal countTotalSum() {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (PaymentItem paymentItem : paymentItems) {
+            sum = sum.add(paymentItem.getFinalPrice());
+        }
+        return sum;
     }
 }
