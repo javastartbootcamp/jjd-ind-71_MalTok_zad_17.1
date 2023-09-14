@@ -41,18 +41,14 @@ public class Payment {
     }
 
     public BigDecimal countDiscountSum() {
-        BigDecimal sum = BigDecimal.ZERO;
-        for (PaymentItem paymentItem : paymentItems) {
-            sum = sum.add(paymentItem.countDiscount());
-        }
-        return sum;
+        return paymentItems.stream()
+                .map(PaymentItem::countDiscount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public BigDecimal countTotalSum() {
-        BigDecimal sum = BigDecimal.ZERO;
-        for (PaymentItem paymentItem : paymentItems) {
-            sum = sum.add(paymentItem.getFinalPrice());
-        }
-        return sum;
+        return paymentItems.stream()
+                .map(PaymentItem::getFinalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

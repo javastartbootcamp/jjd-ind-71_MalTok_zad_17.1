@@ -77,8 +77,7 @@ class PaymentService {
         int year = yearMonth.getYear();
         Month month = yearMonth.getMonth();
         return getStream()
-                .filter(getPredicateForPaymentYear(year))
-                .filter(getPredicateForPaymentMonth(month))
+                .filter(isYearMonthEqual(year, month))
                 .toList();
     }
 
@@ -89,17 +88,13 @@ class PaymentService {
         int year = dateTimeProvider.zonedDateTimeNow().getYear();
         Month month = dateTimeProvider.zonedDateTimeNow().getMonth();
         return getStream()
-                .filter(getPredicateForPaymentYear(year))
-                .filter(getPredicateForPaymentMonth(month))
+                .filter(isYearMonthEqual(year, month))
                 .toList();
     }
 
-    private static Predicate<Payment> getPredicateForPaymentYear(int year) {
-        return payment -> year == payment.getPaymentDate().getYear();
-    }
-
-    private static Predicate<Payment> getPredicateForPaymentMonth(Month month) {
-        return payment -> month.equals(payment.getPaymentDate().getMonth());
+    private static Predicate<Payment> isYearMonthEqual(int year, Month month) {
+        return payment -> year == payment.getPaymentDate().getYear()
+                && month.equals(payment.getPaymentDate().getMonth());
     }
 
     /*
@@ -109,11 +104,11 @@ class PaymentService {
         ZonedDateTime now = dateTimeProvider.zonedDateTimeNow();
         ZonedDateTime past = now.minusDays(days);
         return getStream()
-                .filter(getPredicateForTwoDates(now, past))
+                .filter(isPaymentDateInRange(now, past))
                 .toList();
     }
 
-    private static Predicate<Payment> getPredicateForTwoDates(ZonedDateTime now, ZonedDateTime past) {
+    private static Predicate<Payment> isPaymentDateInRange(ZonedDateTime now, ZonedDateTime past) {
         return payment -> payment.getPaymentDate().isBefore(now)
                 && payment.getPaymentDate().isAfter(past);
     }
@@ -169,13 +164,13 @@ class PaymentService {
      */
     List<PaymentItem> getPaymentsForUserWithEmail(String userEmail) {
         return getStream()
-                .filter(getEmailPredicate(userEmail))
+                .filter(isEmailEqual(userEmail))
                 .map(Payment::getPaymentItems)
                 .flatMap(List::stream)
                 .toList();
     }
 
-    private static Predicate<Payment> getEmailPredicate(String userEmail) {
+    private static Predicate<Payment> isEmailEqual(String userEmail) {
         return payment -> payment.getUser().getEmail().equals(userEmail);
     }
 
@@ -184,14 +179,16 @@ class PaymentService {
      */
     Set<Payment> findPaymentsWithValueOver(int value) {
         return getStream()
-                .filter(payment -> checkIfSumBiggerThanValue(value, payment))
+                .filter(isSumBiggerThanValue(value))
                 .collect(Collectors.toSet());
     }
 
-    private static boolean checkIfSumBiggerThanValue(int value, Payment payment) {
-        BigDecimal valueBig = new BigDecimal(value);
-        BigDecimal sum = payment.countTotalSum();
-        return sum.compareTo(valueBig) > 0;
+    private static Predicate<Payment> isSumBiggerThanValue(int value) {
+        return payment -> {
+            BigDecimal valueBig = new BigDecimal(value);
+            BigDecimal sum = payment.countTotalSum();
+            return sum.compareTo(valueBig) > 0;
+        };
     }
 
 }
